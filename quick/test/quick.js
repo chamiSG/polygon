@@ -57,21 +57,19 @@ describe("Master Chef Farms", () => {
     let ether_amount = 1;
 
     let amountADesired = await chefFarms.getAmountsOut(protocalId, getBigNumber(ether_amount, 18), [fweth, tokenDai.address]);
-    console.log(amountADesired[1]);
-    // await chefFarms.swapETHforToken(
-    //   protocalId,
-    //   amountADesired[1],
-    //   [fweth, tokenDai.address],
-    //   whale,
-    //   {
-    //     value: getBigNumber(ether_amount, 18)
-    //   }
-    // );
-    // let bal_dai = await tokenDai.balanceOf(whale);
-    // console.log("DAI token's balance:", bal_dai);
+    await chefFarms.swapETHforToken(
+      protocalId,
+      amountADesired[1],
+      [fweth, tokenDai.address],
+      whale,
+      {
+        value: getBigNumber(ether_amount, 18)
+      }
+    );
+    let bal_dai = await tokenDai.balanceOf(whale);
+    console.log("DAI token's balance:", bal_dai);
 
     let amountEDesired = await chefFarms.getAmountsOut(protocalId, getBigNumber(ether_amount, 18), [fweth, tokenUni.address]);
-    console.log(amountEDesired[1]);
     await chefFarms.swapETHforToken(
       protocalId,
       amountEDesired[1],

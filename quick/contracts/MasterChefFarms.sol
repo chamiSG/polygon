@@ -90,7 +90,7 @@ contract MasterChefFarms {
         address[] calldata _path,
         address to
     ) external payable {
-        IERC20(_path[0]).approve(routerAddress[_protocolId], 1e18);
+        IERC20(_path[0]).approve(routerAddress[_protocolId], 10e18);
         IUniswapV2Router02(routerAddress[_protocolId]).swapETHForExactTokens{value: msg.value}(
             _amountOutMin,
             _path,

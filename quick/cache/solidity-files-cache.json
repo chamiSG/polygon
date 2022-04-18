@@ -74,8 +74,8 @@
       ]
     },
     "/home/einsfar/swap/polygon/quick/contracts/MasterChefFarms.sol": {
-      "lastModificationDate": 1650294648777,
-      "contentHash": "88df313682f01e009c1a3e1fd50144ba",
+      "lastModificationDate": 1650307964061,
+      "contentHash": "b0f24519616f0f3b81dac486b3fc2565",
       "sourceName": "contracts/MasterChefFarms.sol",
       "solcConfig": {
         "version": "0.6.12",
