@@ -5,19 +5,18 @@ const { getBigNumber } = require("./utils");
 
 const LqdrToken = artifacts.require('LqdrToken');
 const MasterChef = artifacts.require('MasterChefV2');
-const MasterChefFarms = artifacts.require('MasterChefFarms');
 
 describe("Master Chef Farms", () => {
   const protocalId = 80001;
   const dai = "0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063";   //Dai Stablecoin on Polygon
-  const uni = "0xb33EaAd8d922B1083446DC23f610c2567fB5180f";  //Uni on Polygon uni: 
+  const mana = "0xa1c57f48f0deb89f569dfbe6e2b7f46d33606fd4";  //MANA on Polygon 
   const magic = "0x0000000000000000000000000000000000001010"; //Magic on Polygon
 
-  let provider, erc20;
-  let chef, chefFarms, lqdr;
+  let provider, chefFarms, erc20;
+  let chef, lqdr;
 
-  let signers, whaleSigner, owner, whale, minter, fee, dev, alice, bob;
-  let tokenUni, tokenDai;
+  let MasterChefFarms, signers, whaleSigner, owner, whale, minter, fee, dev, alice, bob;
+  let tokenMana, tokenDai;
   beforeEach(async () => {
     signers = await ethers.getSigners();
     [owner] = await ethers.getSigners();
@@ -38,7 +37,10 @@ describe("Master Chef Farms", () => {
     lqdr = await LqdrToken.new({ from: minter });
     chef = await MasterChef.new(lqdr.address, dev, fee, '1000', '100', { from: minter }); 
     await lqdr.transferOwnership(chef.address, { from: minter }); 
-    chefFarms = await MasterChefFarms.new([protocalId], ["0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff"], ["0x5757371414417b8C6CAad45bAeF941aBc7d3Ab32"], [chef.address], minter, { from: minter });
+
+    MasterChefFarms = await ethers.getContractFactory("MasterChefFarms", signers[1]);
+    chefFarms = await MasterChefFarms.deploy([protocalId], ["0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff"], ["0x5757371414417b8C6CAad45bAeF941aBc7d3Ab32"], [chef.address], minter);
+    await chefFarms.deployed();
     
   });
 
@@ -50,14 +52,16 @@ describe("Master Chef Farms", () => {
     whaleSigner = await ethers.provider.getSigner(whale);
 
     tokenDai = await erc20.attach(dai);
-    tokenUni = await erc20.attach(uni);
+    tokenMana = await erc20.attach(mana);
     const tokenLqdr = await erc20.attach(lqdr);
     
     let fweth = await chefFarms.getWETH(protocalId);
     let ether_amount = 1;
 
-    let amountADesired = await chefFarms.getAmountsOut(protocalId, getBigNumber(ether_amount, 18), [fweth, tokenDai.address]);
-    await chefFarms.swapETHforToken(
+    
+
+    let amountADesired = await chefFarms.connect(whaleSigner).getAmountsOut(protocalId, getBigNumber(ether_amount, 18), [fweth, tokenDai.address]);
+    await chefFarms.connect(whaleSigner).swapETHforToken(
       protocalId,
       amountADesired[1],
       [fweth, tokenDai.address],
@@ -69,33 +73,35 @@ describe("Master Chef Farms", () => {
     let bal_dai = await tokenDai.balanceOf(whale);
     console.log("DAI token's balance:", bal_dai);
 
-    let amountEDesired = await chefFarms.getAmountsOut(protocalId, getBigNumber(ether_amount, 18), [fweth, tokenUni.address]);
-    await chefFarms.swapETHforToken(
+    let amountEDesired = await chefFarms.connect(whaleSigner).getAmountsOut(protocalId, getBigNumber(ether_amount, 18), [fweth, tokenMana.address]);
+    await chefFarms.connect(whaleSigner).swapETHforToken(
       protocalId,
       amountEDesired[1],
-      [fweth, tokenUni.address],
+      [fweth, tokenMana.address],
       whale,
       {
         value: getBigNumber(ether_amount, 18)
       }
     );
-    let bal_uni = await tokenUni.balanceOf(whale);
-    console.log("UNI token's balance:", bal_uni);
+    let bal_mana = await tokenMana.balanceOf(whale);
+    console.log("Mana token's balance:", bal_mana);
+
     
     
-    //let amounts = await router.getAmount(uni, dai, bal_uni, bal_dai, 1, 1);
-    //console.log(amounts['amountA']);
-    // await tokenUni.approve(router.address, amounts['amountA']);
-    // await tokenDai.approve(router.address, amounts['amountB']);
-    // await router.safeTransfer(uni, amounts['amountA']);
-    // await router.safeTransfer(dai, amounts['amountB']);
+    
+    let amounts = await chefFarms.connect(whaleSigner).getAmount(protocalId, mana, dai, bal_mana, bal_dai, 1, 1);
+    console.log(chefFarms.address);
+    await tokenMana.approve(chefFarms.address, amounts['amountA']);
+    await tokenDai.approve(chefFarms.address, amounts['amountB']);
+    // await chefFarms.connect(whaleSigner).safeTransfer(protocalId, mana, amounts['amountA']);
+    // await chefFarms.connect(whaleSigner).safeTransfer(protocalId, dai, amounts['amountB']);
 
     // addLiquidityResult = await chefFarms.addLiquidity(
     //   protocalId,
-    //   uni,
+    //   mana,
     //   dai,
-    //   getBigNumber(1, 18),
-    //   getBigNumber(1, 18),
+    //   bal_mana,
+    //   bal_dai,
     //   1,
     //   1,
     //   whale,
@@ -106,9 +112,9 @@ describe("Master Chef Farms", () => {
   // it("Should add the created LP in the MasterChef pool", async function () {
   //   await hre.network.provider.send("hardhat_impersonateAccount", [whale]);
   //   whaleSigner = await ethers.provider.getSigner(whale);
-  //   let pairAddr = await chefFarms.getPair(protocalId, uni, dai);
+  //   let pairAddr = await chefFarms.getPair(protocalId, mana, dai);
   //   let lpToken = await erc20.attach(pairAddr);
-  //   console.log("QUICK LP(UNI/DAI) token's balance:", await lpToken.balanceOf(whale));
+  //   console.log("QUICK LP(MANA/DAI) token's balance:", await lpToken.balanceOf(whale));
   //   let bal = await lpToken.balanceOf(whale);
     
   //   await chefFarms.add(protocalId, parseInt(bal * 0.1), lpToken.address, 100, true, { from: whale });
@@ -121,10 +127,10 @@ describe("Master Chef Farms", () => {
   //   await hre.network.provider.send("hardhat_impersonateAccount", [whale]);
   //   whaleSigner = await ethers.provider.getSigner(whale);
     
-  //   let pairAddr = await chefFarms.getPair(protocalId, uni, dai);
+  //   let pairAddr = await chefFarms.getPair(protocalId, mana, dai);
   //   let lpToken = await erc20.attach(pairAddr);
   //   let bal = await lpToken.balanceOf(whale);
-  //   console.log("SPIRIT LP(UNI/DAI) token's balance:", bal);
+  //   console.log("SPIRIT LP(MANA/DAI) token's balance:", bal);
 
   //   await chefFarms.add(protocalId, parseInt(bal * 0.1), lpToken.address, 100, true, { from: whale });
   //   assert.equal((await chefFarms.poolLength(protocalId)).toString(), "1");

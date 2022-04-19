@@ -74,8 +74,8 @@
       ]
     },
     "/home/einsfar/swap/polygon/quick/contracts/MasterChefFarms.sol": {
-      "lastModificationDate": 1650307964061,
-      "contentHash": "b0f24519616f0f3b81dac486b3fc2565",
+      "lastModificationDate": 1650318802286,
+      "contentHash": "284c694f8b7b28d7f0c247c48cf06b83",
       "sourceName": "contracts/MasterChefFarms.sol",
       "solcConfig": {
         "version": "0.6.12",
@@ -101,6 +101,7 @@
         }
       },
       "imports": [
+        "hardhat/console.sol",
         "@openzeppelin/contracts/token/ERC20/ERC20.sol",
         "./interfaces/IUniswapV2Router02.sol",
         "./interfaces/IMasterChefV2.sol",
@@ -110,7 +111,10 @@
         "0.6.12"
       ],
       "artifacts": [
-        "MasterChefFarms"
+        "IUniswapV2Pair",
+        "MasterChefFarms",
+        "TransferHelper",
+        "UniswapV2Library"
       ]
     },
     "/home/einsfar/swap/polygon/quick/node_modules/@openzeppelin/contracts/token/ERC20/ERC20.sol": {
@@ -815,6 +819,41 @@
       ],
       "artifacts": [
         "Migrations"
+      ]
+    },
+    "/home/einsfar/swap/polygon/quick/node_modules/hardhat/console.sol": {
+      "lastModificationDate": 1650222676996,
+      "contentHash": "cc4777addd464ea56fa35b1c45df0591",
+      "sourceName": "hardhat/console.sol",
+      "solcConfig": {
+        "version": "0.6.12",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        ">=0.4.22 <0.9.0"
+      ],
+      "artifacts": [
+        "console"
       ]
     }
   }
